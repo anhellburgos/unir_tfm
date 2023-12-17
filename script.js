@@ -60,6 +60,7 @@ function initMap() {
       iconAnchor: [12, 41],
       popupAnchor: [1, -34]
     })),
+    loadGeoJSON('provincias.geojson', 'Provincias'),
     loadGeoJSON('cantones.geojson', 'Cantones'),
     loadGeoJSON('parroquias.geojson', 'Parroquias')
   ]).then(function () {
