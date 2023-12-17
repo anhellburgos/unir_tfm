@@ -44,7 +44,6 @@ function loadGeoJSON(url, name, markerIcon = null) {
 
 // Función para inicializar el mapa
 function initMap() {
-  
   // Creamos el mapa
   map = L.map('mapid').setView([-1.724593, -79.552002], 6);
 
@@ -56,18 +55,20 @@ function initMap() {
   // Cargar capas GeoJSON y agregarlas al control de capas
   Promise.all([
     loadGeoJSON('osos.geojson', 'Avistamiento de osos', new L.Icon({
-      iconUrl: 'osito.png', // Reemplaza 'ruta/de/osito.png' con la ruta real de tu imagen
+      iconUrl: 'osito.png',
       iconSize: [25, 25],
       iconAnchor: [12, 41],
       popupAnchor: [1, -34]
     })),
     loadGeoJSON('provincias.geojson', 'Provincias'),
     loadGeoJSON('cantones.geojson', 'Cantones'),
-    loadGeoJSON('parroquias.geojson', 'Parroquias')
+    loadGeoJSON('parroquias.geojson', 'Parroquias'),
+    loadGeoJSON('areas_protegidas.geojson', 'Áreas Protegidas') // Nueva línea para cargar áreas protegidas
   ]).then(function () {
     L.control.layers(null, overlayLayers, { collapsed: false }).addTo(map);
 
     // Desactivar (unchecked) las capas de Cantones y Parroquias por defecto
+    map.removeLayer(overlayLayers['Provincias']);
     map.removeLayer(overlayLayers['Cantones']);
     map.removeLayer(overlayLayers['Parroquias']);
   });
@@ -102,11 +103,15 @@ function initMap() {
   document.getElementById('opentopomap-button').addEventListener('click', function () {
     changeBasemap('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png');
   });
-  
+
   // Nuevo botón para Carto
   document.getElementById('CartoDB.DarkMatterNoLabels').addEventListener('click', function () {
     changeBasemap('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png');
   });
+
+  // Widget para control de capa de áreas protegidas (en la esquina inferior derecha)
+  var areasProtegidasControl = L.control.layers(null, { 'Áreas Protegidas': overlayLayers['Áreas Protegidas'] }, { position: 'bottomright' });
+  areasProtegidasControl.addTo(map);
 }
 
 // Inicializamos el mapa cuando la página carga
