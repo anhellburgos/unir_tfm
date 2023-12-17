@@ -44,7 +44,7 @@ function initMap() {
 
 // Cargar capas GeoJSON y agregarlas al control de capas
 Promise.all([
-  loadGeoJSON('osos.geojson', 'Osos'),
+  loadGeoJSON('osos.geojson', 'Avistamiento de osos'),
   loadGeoJSON('cantones.geojson', 'Cantones'),
   loadGeoJSON('parroquias.geojson', 'Parroquias')
 ]).then(function () {
