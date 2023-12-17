@@ -30,7 +30,7 @@ function initMap() {
   streets.addTo(map);
   currentBasemap = streets;
 
-  // Cargar capas GeoJSON y agregarlas por defecto
+  // Cargar capas GeoJSON y agregarlas al control de capas
   fetch('osos.geojson')
     .then(function (response) {
       return response.json();
@@ -38,7 +38,6 @@ function initMap() {
     .then(function (data) {
       var ososLayer = L.geoJSON(data);
       overlayLayers["Osos"] = ososLayer;
-      ososLayer.addTo(map);
     });
 
   fetch('cantones.geojson')
@@ -48,9 +47,39 @@ function initMap() {
     .then(function (data) {
       var cantonesLayer = L.geoJSON(data);
       overlayLayers["Cantones"] = cantonesLayer;
-      L.control.layers(null, overlayLayers, { collapsed: false }).addTo(map);
     });
 
+  fetch('parroquias.geojson')
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      var parroquiasLayer = L.geoJSON(data);
+      overlayLayers["Parroquias"] = parroquiasLayer;
+    });
+
+  // Función para agregar las capas al mapa y al control de capas
+  Promise.all([
+    fetch('osos.geojson'),
+    fetch('cantones.geojson'),
+    fetch('parroquias.geojson')
+  ])
+    .then(function (responses) {
+      return Promise.all(responses.map(function (response) {
+        return response.json();
+      }));
+    })
+    .then(function (data) {
+      var ososLayer = L.geoJSON(data[0]);
+      var cantonesLayer = L.geoJSON(data[1]);
+      var parroquiasLayer = L.geoJSON(data[2]);
+
+      overlayLayers["Osos"] = ososLayer.addTo(map);
+      overlayLayers["Cantones"] = cantonesLayer;
+      overlayLayers["Parroquias"] = parroquiasLayer;
+
+      L.control.layers(null, overlayLayers, { collapsed: false }).addTo(map);
+    });
 
   // Agregamos el marcador draggable
   var redIcon = new L.Icon({
