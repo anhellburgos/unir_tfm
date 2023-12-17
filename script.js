@@ -21,13 +21,23 @@ function showMarkerCoordinates(marker) {
 }
 
 // Función para cargar y agregar capas GeoJSON al mapa
-function loadGeoJSON(url, name) {
+function loadGeoJSON(url, name, markerIcon = null) {
   return fetch(url)
     .then(function (response) {
       return response.json();
     })
     .then(function (data) {
-      var layer = L.geoJSON(data);
+      var layer;
+      if (markerIcon) {
+        // Si se proporciona un icono de marcador, usarlo para esta capa
+        layer = L.geoJSON(data, {
+          pointToLayer: function (feature, latlng) {
+            return L.marker(latlng, { icon: markerIcon });
+          }
+        });
+      } else {
+        layer = L.geoJSON(data);
+      }
       overlayLayers[name] = layer.addTo(map);
     });
 }
@@ -42,24 +52,32 @@ function initMap() {
   streets.addTo(map);
   currentBasemap = streets;
 
-// Cargar capas GeoJSON y agregarlas al control de capas
-Promise.all([
-  loadGeoJSON('osos.geojson', 'Avistamiento de osos'),
-  loadGeoJSON('cantones.geojson', 'Cantones'),
-  loadGeoJSON('parroquias.geojson', 'Parroquias')
-]).then(function () {
-  L.control.layers(null, overlayLayers, { collapsed: false }).addTo(map);
-  
-  // Desactivar (unchecked) las capas de Cantones y Parroquias por defecto
-  map.removeLayer(overlayLayers['Cantones']);
-  map.removeLayer(overlayLayers['Parroquias']);
-});
+  // Cargar capas GeoJSON y agregarlas al control de capas
+  Promise.all([
+    loadGeoJSON('osos.geojson', 'Avistamiento de osos', new L.Icon({
+      iconUrl: 'osito.png', // Reemplaza 'ruta/de/osito.png' con la ruta real de tu imagen
+      iconSize: [25, 25],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34]
+    })),
+    loadGeoJSON('cantones.geojson', 'Cantones'),
+    loadGeoJSON('parroquias.geojson', 'Parroquias')
+  ]).then(function () {
+    L.control.layers(null, overlayLayers, { collapsed: false }).addTo(map);
+
+    // Desactivar (unchecked) las capas de Cantones y Parroquias por defecto
+    map.removeLayer(overlayLayers['Cantones']);
+    map.removeLayer(overlayLayers['Parroquias']);
+  });
 
   // Agregamos el marcador draggable
   var redIcon = new L.Icon({
     iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-shadow.png',
-    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
   });
 
   var marker = L.marker([-1.724593, -79.552002], { draggable: true, icon: redIcon }).addTo(map);
