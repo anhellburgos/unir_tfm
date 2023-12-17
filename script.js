@@ -44,6 +44,7 @@ function loadGeoJSON(url, name, markerIcon = null) {
 
 // Función para inicializar el mapa
 function initMap() {
+  
   // Creamos el mapa
   map = L.map('mapid').setView([-1.724593, -79.552002], 6);
 
@@ -81,7 +82,7 @@ function initMap() {
     shadowSize: [41, 41]
   });
 
-  var marker = L.marker([-1.724593, -79.552002], { draggable: true, icon: redIcon }).addTo(map);
+  var marker = L.marker([-0.289763, -78.327026], { draggable: true, icon: redIcon }).addTo(map);
 
   marker.bindPopup("<b>Coordenadas WGS 84</b><br>Latitud: " + marker.getLatLng().lat.toFixed(6) + "<br>Longitud: " + marker.getLatLng().lng.toFixed(6)).openPopup();
 
@@ -100,6 +101,11 @@ function initMap() {
 
   document.getElementById('opentopomap-button').addEventListener('click', function () {
     changeBasemap('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png');
+  });
+  
+  // Nuevo botón para Carto
+  document.getElementById('CartoDB.DarkMatterNoLabels').addEventListener('click', function () {
+    changeBasemap('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png');
   });
 }
 
