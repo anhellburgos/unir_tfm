@@ -20,6 +20,18 @@ function showMarkerCoordinates(marker) {
   marker.openPopup();
 }
 
+// Función para cargar y agregar capas GeoJSON al mapa
+function loadGeoJSON(url, name) {
+  return fetch(url)
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      var layer = L.geoJSON(data);
+      overlayLayers[name] = layer.addTo(map);
+    });
+}
+
 // Función para inicializar el mapa
 function initMap() {
   // Creamos el mapa
@@ -30,56 +42,18 @@ function initMap() {
   streets.addTo(map);
   currentBasemap = streets;
 
-  // Cargar capas GeoJSON y agregarlas al control de capas
-  fetch('osos.geojson')
-    .then(function (response) {
-      return response.json();
-    })
-    .then(function (data) {
-      var ososLayer = L.geoJSON(data);
-      overlayLayers["Osos"] = ososLayer;
-    });
-
-  fetch('cantones.geojson')
-    .then(function (response) {
-      return response.json();
-    })
-    .then(function (data) {
-      var cantonesLayer = L.geoJSON(data);
-      overlayLayers["Cantones"] = cantonesLayer;
-    });
-
-  fetch('parroquias.geojson')
-    .then(function (response) {
-      return response.json();
-    })
-    .then(function (data) {
-      var parroquiasLayer = L.geoJSON(data);
-      overlayLayers["Parroquias"] = parroquiasLayer;
-    });
-
-  // Función para agregar las capas al mapa y al control de capas
-  Promise.all([
-    fetch('osos.geojson'),
-    fetch('cantones.geojson'),
-    fetch('parroquias.geojson')
-  ])
-    .then(function (responses) {
-      return Promise.all(responses.map(function (response) {
-        return response.json();
-      }));
-    })
-    .then(function (data) {
-      var ososLayer = L.geoJSON(data[0]);
-      var cantonesLayer = L.geoJSON(data[1]);
-      var parroquiasLayer = L.geoJSON(data[2]);
-
-      overlayLayers["Osos"] = ososLayer.addTo(map);
-      overlayLayers["Cantones"] = cantonesLayer;
-      overlayLayers["Parroquias"] = parroquiasLayer;
-
-      L.control.layers(null, overlayLayers, { collapsed: false }).addTo(map);
-    });
+// Cargar capas GeoJSON y agregarlas al control de capas
+Promise.all([
+  loadGeoJSON('osos.geojson', 'Osos'),
+  loadGeoJSON('cantones.geojson', 'Cantones'),
+  loadGeoJSON('parroquias.geojson', 'Parroquias')
+]).then(function () {
+  L.control.layers(null, overlayLayers, { collapsed: false }).addTo(map);
+  
+  // Desactivar (unchecked) las capas de Cantones y Parroquias por defecto
+  map.removeLayer(overlayLayers['Cantones']);
+  map.removeLayer(overlayLayers['Parroquias']);
+});
 
   // Agregamos el marcador draggable
   var redIcon = new L.Icon({
