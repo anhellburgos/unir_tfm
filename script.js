@@ -60,14 +60,18 @@ function initMap() {
       iconAnchor: [12, 41],
       popupAnchor: [1, -34]
     })),
+    loadGeoJSON('bosques_vegetacion.geojson', 'Bosques y Vegetación'),
+    loadGeoJSON('areas_protegidas.geojson', 'Áreas Protegidas'),
     loadGeoJSON('provincias.geojson', 'Provincias'),
     loadGeoJSON('cantones.geojson', 'Cantones'),
-    loadGeoJSON('parroquias.geojson', 'Parroquias'),
-    loadGeoJSON('areas_protegidas.geojson', 'Áreas Protegidas') // Nueva línea para cargar áreas protegidas
+    loadGeoJSON('parroquias.geojson', 'Parroquias')    
+    
+
   ]).then(function () {
     L.control.layers(null, overlayLayers, { collapsed: false }).addTo(map);
 
     // Desactivar (unchecked) las capas de Cantones y Parroquias por defecto
+    map.removeLayer(overlayLayers['Bosques y Vegetación']);
     map.removeLayer(overlayLayers['Provincias']);
     map.removeLayer(overlayLayers['Cantones']);
     map.removeLayer(overlayLayers['Parroquias']);
