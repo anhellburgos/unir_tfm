@@ -18,7 +18,6 @@ function showMarkerCoordinates(marker) {
   marker.setPopupContent(`<b>Coordenadas WGS 84</b><br>Latitud: ${position.lat.toFixed(6)}<br>Longitud: ${position.lng.toFixed(6)}`);
   marker.openPopup();
 }
-
 // Función para cargar y agregar capas GeoJSON al mapa
 function loadGeoJSON(url, name, markerIcon = null) {
   return fetch(url)
@@ -81,9 +80,6 @@ function initMap() {
   document.getElementById('opentopomap-button').addEventListener('click', () => changeBasemap('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'));
   document.getElementById('CartoDB.DarkMatterNoLabels').addEventListener('click', () => changeBasemap('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png'));
 
-  const areasProtegidasControl = L.control.layers(null, { 'Áreas Protegidas': overlayLayers['Áreas Protegidas'] }, { position: 'bottomright' });
-  areasProtegidasControl.addTo(map);
 }
-
 // Inicializamos el mapa cuando la página carga
 window.onload = initMap;
