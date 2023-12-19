@@ -1,85 +1,105 @@
-// Variables globales
-var map;
-var currentBasemap;
-var overlayLayers = {};
+const globalVars = {
+  map: null,
+  currentBasemap: null,
+  overlayLayers: {}
+};
 
-// Función para cambiar el basemap
 function changeBasemap(basemapUrl) {
+  const { map, currentBasemap } = globalVars;
   if (currentBasemap) {
     map.removeLayer(currentBasemap);
   }
   const tiles = L.tileLayer(basemapUrl, { attribution: '' }).addTo(map);
-  currentBasemap = tiles;
+  globalVars.currentBasemap = tiles;
 }
 
-// Función para mostrar las coordenadas del marcador
-function showMarkerCoordinates(marker) {
-  const position = marker.getLatLng();
-  marker.setPopupContent(`<b>Coordenadas WGS 84</b><br>Latitud: ${position.lat.toFixed(6)}<br>Longitud: ${position.lng.toFixed(6)}`);
-  marker.openPopup();
-}
-// Función para cargar y agregar capas GeoJSON al mapa
-function loadGeoJSON(url, name, markerIcon = null) {
+function loadGeoJSON(url, name, options = {}) {
   return fetch(url)
     .then(response => response.json())
     .then(data => {
+      const { map, overlayLayers } = globalVars;
       let layer;
-      if (markerIcon) {
+
+      if (options.markerIcon) {
         layer = L.geoJSON(data, {
-          pointToLayer: (feature, latlng) => L.marker(latlng, { icon: markerIcon })
+          pointToLayer: (feature, latlng) => {
+            const selectedProperties = {
+              basisOfRec: feature.properties.basisOfRec,
+              species: feature.properties.species,
+              stateProvi: feature.properties.stateProvi,
+              decimalLat: feature.properties.decimalLat,
+              decimalLon: feature.properties.decimalLon,
+              eventDate: feature.properties.eventDate,
+              references: feature.properties.references,
+              identified: feature.properties.identified
+            };
+
+            const marker = L.marker(latlng, { icon: options.markerIcon });
+            marker.on('click', () => {
+              const popupContent = Object.entries(selectedProperties)
+                .map(([key, value]) => {
+                  if (key === 'references') {
+                    return `<b>${key}:</b> <a href="${value}" target="_blank">${value}</a>`;
+                  }
+                  return `<b>${key}:</b> ${value}`;
+                })
+                .join('<br>');
+              marker.bindPopup(popupContent).openPopup();
+            });
+            return marker;
+          },
         });
       } else {
-        layer = L.geoJSON(data);
+        layer = L.geoJSON(data, {
+          style: options.style,
+          pointToLayer: options.style ? null : (feature, latlng) => L.marker(latlng),
+        });
       }
+
+      if (options.style && !options.markerIcon) {
+        layer.setStyle(options.style);
+      }
+
       overlayLayers[name] = layer.addTo(map);
     });
 }
 
-// Función para inicializar el mapa
-function initMap() {
-  map = L.map('mapid').setView([-1.724593, -79.552002], 6);
 
-  const streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
-  currentBasemap = streets;
+function initializeMap() {
+  globalVars.map = L.map('mapid').setView([-1.724593, -79.552002], 6);
 
-  Promise.all([
-    loadGeoJSON('osos.geojson', 'Avistamiento de osos', new L.Icon({
-      iconUrl: 'osito.png',
-      iconSize: [25, 25],
-      iconAnchor: [12, 41],
-      popupAnchor: [1, -34]
-    })),
-    loadGeoJSON('bosques_vegetacion.geojson', 'Bosques y Vegetación'),
-    loadGeoJSON('areas_protegidas.geojson', 'Áreas Protegidas'),
-    loadGeoJSON('provincias.geojson', 'Provincias'),
-    loadGeoJSON('cantones.geojson', 'Cantones'),
-    loadGeoJSON('parroquias.geojson', 'Parroquias')
-  ]).then(() => {
+  const streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(globalVars.map);
+  globalVars.currentBasemap = streets;
+
+  const geoJSONData = [
+    { url: 'osos.geojson', name: 'Avistamiento de osos', options: { markerIcon: new L.Icon({ iconUrl: 'osito.png', iconSize: [25, 25], iconAnchor: [12, 41], popupAnchor: [1, -34] }) } },
+    { url: 'bosques_vegetacion.geojson', name: 'Bosques y Vegetación', options: { style: { color: 'purple', fillOpacity: 0.3 } } },
+    { url: 'areas_protegidas.geojson', name: 'Áreas Protegidas', options: { style: { color: 'green', fillOpacity: 0.3 } } },
+    { url: 'provincias.geojson', name: 'Provincias' },
+    { url: 'cantones.geojson', name: 'Cantones' },
+    { url: 'parroquias.geojson', name: 'Parroquias' }
+  ];
+
+  const geoJSONPromises = geoJSONData.map(item => loadGeoJSON(item.url, item.name, item.options));
+
+  Promise.all(geoJSONPromises).then(() => {
+    const { map, overlayLayers } = globalVars;
     L.control.layers(null, overlayLayers, { collapsed: false }).addTo(map);
     ['Bosques y Vegetación', 'Provincias', 'Cantones', 'Parroquias'].forEach(layerName => {
       map.removeLayer(overlayLayers[layerName]);
     });
   });
 
-  const redIcon = new L.Icon({
-    iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
+  const basemapButtons = {
+    'openstreetmap-button': 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    'esri-button': 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    'opentopomap-button': 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+    'CartoDB.DarkMatterNoLabels': 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png'
+  };
+
+  Object.keys(basemapButtons).forEach(buttonId => {
+    document.getElementById(buttonId).addEventListener('click', () => changeBasemap(basemapButtons[buttonId]));
   });
-
-  const marker = L.marker([-0.289763, -78.327026], { draggable: true, icon: redIcon }).addTo(map);
-  marker.bindPopup(`<b>Coordenadas WGS 84</b><br>Latitud: ${marker.getLatLng().lat.toFixed(6)}<br>Longitud: ${marker.getLatLng().lng.toFixed(6)}`).openPopup();
-
-  marker.on('drag', event => showMarkerCoordinates(marker));
-
-  document.getElementById('openstreetmap-button').addEventListener('click', () => changeBasemap('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'));
-  document.getElementById('esri-button').addEventListener('click', () => changeBasemap('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'));
-  document.getElementById('opentopomap-button').addEventListener('click', () => changeBasemap('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'));
-  document.getElementById('CartoDB.DarkMatterNoLabels').addEventListener('click', () => changeBasemap('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png'));
-
 }
-// Inicializamos el mapa cuando la página carga
-window.onload = initMap;
+
+window.onload = initializeMap;
