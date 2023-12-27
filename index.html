@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.css"
         integrity="sha384-  xzDn7bYJQzLYaRgLHm1n0+7y5kp0/YF9UKpw5eymA6vzk5YUpgM+KGszEJW8zv+" crossorigin="" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+    <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 
 <body>
@@ -28,13 +28,18 @@
         integrity="sha384-  c+wMfCgNb9PnW6pg8h+jnxHTAT6w+Y6Uugr/IBrG19UJ/O+xQn09eRyRYYP1m5Wo" crossorigin=""></script>
     <script src="script.js"></script>
     
+    <div class="chart" id="barChart"></div>
+    <script src="barras.js"></script>
+    
     <button id="openstreetmap-button">OpenStreetMap</button>
     <button id="esri-button">Esri World Imagery</button>
     <button id="opentopomap-button">OpenTopoMap</button>
     <button id="CartoDB.DarkMatterNoLabels">CartoDB</button>
+
 
     <footer>
         Trabajo de fin de Master - Universidad de la Rioja - UNIR &copy; 2023
     </footer>
 </body>
 </html>
+
