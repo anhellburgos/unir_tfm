@@ -9,6 +9,11 @@
         integrity="sha384-  xzDn7bYJQzLYaRgLHm1n0+7y5kp0/YF9UKpw5eymA6vzk5YUpgM+KGszEJW8zv+" crossorigin="" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    
+    <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
+    <py-env>
+        - matplotlib
+    </py-env>
 </head>
 
 <body>
@@ -28,9 +33,46 @@
         integrity="sha384-  c+wMfCgNb9PnW6pg8h+jnxHTAT6w+Y6Uugr/IBrG19UJ/O+xQn09eRyRYYP1m5Wo" crossorigin=""></script>
     <script src="script.js"></script>
     
-    <div class="chart" id="barChart"></div>
-    <script src="barras.js"></script>
-    
+    <!-- <div class="chart" id="barChart"></div>
+    <script src="barras.js"></script> -->
+    <h1>PyScript Uso de Librerias Externas de Python</h1>
+    <div id="mpl"></div>
+    <py-script>
+import matplotlib.pyplot as plt
+import matplotlib.tri as tri
+import numpy as np
+
+# First create the x and y coordinates of the points.
+n_angles = 36
+n_radii = 8
+min_radius = 0.25
+radii = np.linspace(min_radius, 0.95, n_radii)
+
+angles = np.linspace(0, 2 * np.pi, n_angles, endpoint=False)
+angles = np.repeat(angles[..., np.newaxis], n_radii, axis=1)
+angles[:, 1::2] += np.pi / n_angles
+
+x = (radii * np.cos(angles)).flatten()
+y = (radii * np.sin(angles)).flatten()
+z = (np.cos(radii) * np.cos(3 * angles)).flatten()
+
+# Create the Triangulation; no triangles so Delaunay triangulation created.
+triang = tri.Triangulation(x, y)
+
+# Mask off unwanted triangles.
+triang.set_mask(np.hypot(x[triang.triangles].mean(axis=1),
+                         y[triang.triangles].mean(axis=1))
+                < min_radius)
+
+fig1, ax1 = plt.subplots()
+ax1.set_aspect('equal')
+tpc = ax1.tripcolor(triang, z, shading='flat')
+fig1.colorbar(tpc)
+ax1.set_title('tripcolor of Delaunay triangulation, flat shading')
+
+fig1
+    </py-script>
+
     <button id="openstreetmap-button">OpenStreetMap</button>
     <button id="esri-button">Esri World Imagery</button>
     <button id="opentopomap-button">OpenTopoMap</button>
@@ -42,4 +84,3 @@
     </footer>
 </body>
 </html>
-
